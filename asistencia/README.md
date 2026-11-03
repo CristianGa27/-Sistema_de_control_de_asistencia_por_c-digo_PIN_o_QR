@@ -1,42 +1,41 @@
-# Control de Asistencia (Cédula / PIN / QR)
+# 🕒 Sistema de Control de Asistencia por Cédula, PIN o Código QR
 
-Next.js + Supabase. Kiosco para marcar entrada y salida con cédula, PIN de 4 dígitos o código QR.
-Muestra la foto de la persona con un mensaje **verde (a tiempo)**, **rojo (tarde)** o **azul (salida)**,
-y la lista de presentes del día.
+Sistema web completo de **Control de Asistencia** construido con **Next.js (App Router)**, **Supabase (PostgreSQL, Auth, Storage)** y **Tailwind CSS**.
 
-## Puesta en marcha
+Permite registrar la **entrada** y **salida** de personas desde un panel tipo **Kiosco** o desde el **celular**, guardando la hora exacta del servidor, validando horarios laborales y mostrando en vivo la **lista de presentes del día**.
 
-### 1. Supabase
-1. Crea un proyecto en https://supabase.com.
-2. Ve a **SQL Editor**, pega todo el contenido de `supabase/migrations/0001_init.sql` y ejecútalo.
-3. Crea tu usuario administrador: **Authentication → Users → Add user** (correo + contraseña, marca *Auto Confirm*).
-4. Dale permisos de admin ejecutando en el SQL Editor (cambia el correo):
-   ```sql
-   insert into perfiles_admin (id, nombre)
-   select id, 'Administrador' from auth.users where email = 'tu-correo@ejemplo.com';
-   ```
+---
 
-### 2. Variables de entorno
-Copia `.env.example` a `.env.local` y llena los valores de **Project Settings → API**.
+## ✨ Características principales
 
-### 3. Ejecutar
+- **🔢 Triple método de marcación:**
+  - **Cédula / Documento** con teclado numérico en pantalla o lector físico.
+  - **PIN de 4 dígitos** para marcación rápida.
+  - **Código QR dinámico y por carnet:** muestra un QR en la pantalla del kiosco para escanear desde el celular (`/marcar`) o permite abrir la cámara en dispositivos móviles para escanear el carnet QR de la persona.
+- **📸 Confirmación visual con foto y sonido:**
+  - 🟢 **Verde (`¡Llegaste a tiempo!`):** cuando la persona marca entrada dentro de su horario + minutos de tolerancia.
+  - 🔴 **Rojo (`Llegaste tarde`):** muestra la foto y los minutos exactos de retraso.
+  - 🔵 **Azul (`Hasta luego`):** al registrar la salida una vez cumplido su horario laboral.
+- **🔒 Control de horario laboral:**
+  - No permite marcar **salida** si la persona no ha registrado su **entrada** del día o si aún no ha terminado su horario laboral (`hora_salida`).
+- **📋 Lista de presentes en tiempo real:**
+  - Muestra en el Kiosco y en el Dashboard quiénes están presentes hoy, su foto, área, hora de entrada y estado de puntualidad (`A tiempo` / `Tarde`).
+- **⚙️ Panel de Administración (`/admin`):**
+  - **Resumen del día:** contadores de presentes ahora, llegadas a tiempo, llegadas tarde y ausentes.
+  - **Gestión de Personas:** CRUD completo, subida o captura de foto desde cámara (con compresión automática), asignación de horario, generación e impresión de **carnet con código QR**.
+  - **Gestión de Horarios:** creación de turnos con hora de entrada, hora de salida y minutos de tolerancia (también disponible como creación rápida desde el formulario de personas).
+  - **Historial y Reportes:** filtro por rango de fechas, persona y tipo (`Entradas`, `Salidas`, `Llegadas tarde`) + **exportación a CSV (Excel)**.
+
+---
+
+## 🚀 Instalación rápida
+
 ```bash
+cd asistencia
 npm install
 npm run dev
 ```
-- Kiosco: http://localhost:3000/kiosco
-- Administración: http://localhost:3000/admin
 
-## Uso
-1. En **Admin → Horarios** ajusta la hora de entrada y la tolerancia.
-2. En **Admin → Personas** registra a cada persona con su foto, cédula, PIN (opcional) y horario.
-3. Desde la ficha de la persona descarga o imprime su carnet con QR.
-4. Abre `/kiosco` en el equipo de la entrada (F11 para pantalla completa).
-
-## Reglas
-- La primera marcación del día es **entrada**, la siguiente **salida**, y así sucesivamente.
-- La hora la pone el servidor de base de datos (no se puede manipular desde el equipo).
-- No se permite marcar dos veces en menos de 60 segundos.
-- Entrada después de *hora de entrada + tolerancia* = **tarde**.
-- La cámara para escanear QR requiere `localhost` o HTTPS.
-- Los lectores QR USB funcionan en la pestaña "Cédula / PIN" (escriben el código y presionan Enter).
+1. Ejecuta `supabase/migrations/0001_init.sql` en el **SQL Editor** de tu proyecto en Supabase.
+2. Configura `.env.local` basándote en `.env.example`.
+3. Abre `http://localhost:3000/kiosco` (Kiosco) o `http://localhost:3000/admin` (Administración).
