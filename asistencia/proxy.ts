@@ -9,30 +9,44 @@ export async function proxy(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!url || !key) {
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      loginUrl.searchParams.set('error', 'config')
+      return NextResponse.redirect(loginUrl)
+    }
     return response
   }
 
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          response = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-        response = NextResponse.next({ request })
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
-      },
-    },
-  })
+    })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user && request.nextUrl.pathname.startsWith('/admin')) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    return NextResponse.redirect(loginUrl)
+    if (!user && request.nextUrl.pathname.startsWith('/admin')) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      return NextResponse.redirect(loginUrl)
+    }
+  } catch {
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   return response

@@ -4,6 +4,10 @@ import { supabaseServer } from '@/lib/supabase/server'
 
 /** Exige un usuario autenticado que esté en perfiles_admin. */
 export async function requireAdmin() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    redirect('/login?error=config')
+  }
+
   const supabase = await supabaseServer()
   const {
     data: { user },
@@ -20,4 +24,3 @@ export async function requireAdmin() {
 
   return { supabase, user, perfil }
 }
-
